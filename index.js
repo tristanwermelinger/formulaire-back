@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const formDate = require("form-data");
+const formData = require("form-data");
 const Mailgun = require("mailgun.js");
 require("dotenv").config();
 
@@ -19,7 +19,7 @@ app.get("/", (req, res) => {
   res.json("Bonjour");
 });
 
-app.post("/form", (req, res) => {
+app.post("/form", async (req, res) => {
   console.log("route /form");
   try {
     const { firstname, lastname, email, subject, message } = req.body;
@@ -29,19 +29,20 @@ app.post("/form", (req, res) => {
       from: `${firstname} ${lastname} <${email}>`,
       to: "tristan.wermelinger@gmail.com",
       subject: `Formaulaire de contact`,
-      message: req.body.message,
+      message: message,
     };
 
-    client.messages
-      .create(
-        `sandbox70b44f5afd194bd79bc411103337dc99.mailgun.org`,
-        messageData
-      )
-      .then((response) => {
-        console.log(response);
-        res.json({ message: "email send" });
-      });
+    const response = await client.messages.create(
+      process.env.MAILGUN_DOMAIN,
+      messageData
+    );
+    console.log(response);
+
+    res.status(200).json(response);
   } catch (error) {
     res.json({ message: error.message });
   }
+  app.listen("3002", () => {
+    console.log("server started ");
+  });
 });
